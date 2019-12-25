@@ -43,7 +43,7 @@ var (
 	shellImage  = flag.String("shell-image", "busybox", "The container image containing a shell")
 	gsutilImage = flag.String("gsutil-image", "google/cloud-sdk",
 		"The container image containing gsutil")
-	buildGCSFetcherImage = flag.String("build-gcs-fetcher-image", "gcr.io/cloud-builders/gcs-fetcher:latest",
+	buildGCSFetcherImage = flag.String("build-gcs-fetcher-image", "gcr.azk8s.cn/cloud-builders/gcs-fetcher:latest",
 		"The container image containing our GCS fetcher binary.")
 	prImage = flag.String("pr-image", "override-with-pr:latest",
 		"The container image containing our PR binary.")

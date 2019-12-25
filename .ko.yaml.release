@@ -1,4 +1,4 @@
 baseImageOverrides:
-  github.com/tektoncd/pipeline/cmd/creds-init: gcr.io/tektoncd-release/github.com/tektoncd/pipeline/build-base:latest
-  github.com/tektoncd/pipeline/cmd/git-init: gcr.io/tektoncd-release/github.com/tektoncd/pipeline/build-base:latest
+  github.com/tektoncd/pipeline/cmd/creds-init: gcr.azk8s.cn/tektoncd-release/github.com/tektoncd/pipeline/build-base:latest
+  github.com/tektoncd/pipeline/cmd/git-init: gcr.azk8s.cn/tektoncd-release/github.com/tektoncd/pipeline/build-base:latest
   github.com/tektoncd/pipeline/cmd/entrypoint: busybox # image should have shell in $PATH
