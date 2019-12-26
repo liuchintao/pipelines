@@ -18,6 +18,10 @@ package pod
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"unsafe"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -53,10 +57,23 @@ func resolveEntrypoints(cache EntrypointCache, namespace, serviceAccountName str
 			continue
 		}
 
+		var insecure bool
+		for _, env := range s.Env {
+			switch {
+			case strings.EqualFold(env.Name, "insecure"):
+				insecure, _ = strconv.ParseBool(env.Value)
+			}
+		}
+
 		origRef, err := name.ParseReference(s.Image, name.WeakValidation)
 		if err != nil {
 			return nil, err
 		}
+
+		if insecure {
+			origRef = setInsecure(origRef)
+		}
+
 		var img v1.Image
 		if cimg, found := localCache[origRef]; found {
 			img = cimg
@@ -82,6 +99,29 @@ func resolveEntrypoints(cache EntrypointCache, namespace, serviceAccountName str
 		steps[i].Command = ep            // Specify the command explicitly.
 	}
 	return steps, nil
+}
+
+func setInsecure(ref name.Reference) name.Reference {
+	repo := ref.Context()
+	unsafeSetInsecureRegistry(&repo)
+	refV := reflect.ValueOf(ref)
+	newRefStruct := reflect.New(refV.Type()).Elem()
+	newRefStruct.Set(refV)
+	newRefRepo := newRefStruct.FieldByName("Repository")
+	newRefRepo = reflect.NewAt(newRefRepo.Type(), unsafe.Pointer(newRefRepo.UnsafeAddr())).Elem()
+	newRefRepo.Set(reflect.ValueOf(repo))
+	newRef := newRefStruct.Interface().(name.Reference)
+	return newRef
+}
+
+func unsafeSetInsecureRegistry(repo *name.Repository) {
+	repoStruct := reflect.ValueOf(repo).Elem()
+	oldReg := repoStruct.FieldByName("Registry")
+	newReg := reflect.NewAt(oldReg.Type(), unsafe.Pointer(oldReg.UnsafeAddr())).Elem()
+	newReg.Set(oldReg)
+	newRegInsecure := newReg.FieldByName("insecure")
+	newRegInsecure = reflect.NewAt(newRegInsecure.Type(), unsafe.Pointer(newRegInsecure.UnsafeAddr())).Elem()
+	newRegInsecure.SetBool(true)
 }
 
 // imageData pulls the entrypoint from the image, and returns the given
